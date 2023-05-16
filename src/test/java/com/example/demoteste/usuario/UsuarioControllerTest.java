@@ -287,7 +287,6 @@ public class UsuarioControllerTest {
                 .andExpect(jsonPath("$.detail",
                         is("UsuarioNotFoundException: Não foi possível encontrar o usuário: (ID) 1")))
                 .andExpect(jsonPath("$.instance", is("/api/v1/usuarios/1")))
-                .andExpect(jsonPath("$.sessionId").exists())
                 .andExpect(jsonPath("$.timestamp").exists());
 
         then(usuarioService).should().recuperar(id);
@@ -313,7 +312,6 @@ public class UsuarioControllerTest {
                 .andExpect(jsonPath("$.detail",
                         is("UsuarioNotFoundException: Não foi possível encontrar o usuário: (IDP_ID) 123abc")))
                 .andExpect(jsonPath("$.instance", is("/api/v1/usuarios/IdP/123abc")))
-                .andExpect(jsonPath("$.sessionId").exists())
                 .andExpect(jsonPath("$.timestamp").exists());
 
         then(usuarioService).should().recuperar(id);
@@ -339,7 +337,6 @@ public class UsuarioControllerTest {
                 .andExpect(jsonPath("$.detail",
                         is("UsuarioNotFoundException: Não foi possível encontrar o usuário: (ID) 1")))
                 .andExpect(jsonPath("$.instance", is("/api/v1/usuarios/1")))
-                .andExpect(jsonPath("$.sessionId").exists())
                 .andExpect(jsonPath("$.timestamp").exists());
 
         then(usuarioService).should().deletar(id);
@@ -384,7 +381,6 @@ public class UsuarioControllerTest {
                 .andExpect(jsonPath("$.status", is(500)))
                 .andExpect(jsonPath("$.detail", is(detailString)))
                 .andExpect(jsonPath("$.instance", is("/api/v1/usuarios")))
-                .andExpect(jsonPath("$.sessionId").exists())
                 .andExpect(jsonPath("$.timestamp").exists());
     }
 }

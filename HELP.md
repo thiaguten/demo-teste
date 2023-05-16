@@ -22,3 +22,5 @@ The following guides illustrate how to use some features concretely:
 * [Serving Web Content with Spring MVC](https://spring.io/guides/gs/serving-web-content/)
 * [Building REST services with Spring](https://spring.io/guides/tutorials/rest/)
 * [Testing the Web Layer](https://spring.io/guides/gs/testing-web/)
+* [Write BDD Unit Tests with BDDMockito and AssertJ](https://thepracticaldeveloper.com/write-bdd-unit-tests-with-bddmockito-and-assertj/)
+* [@SpringBootTest vs @WebMvcTest](https://www.javaguides.net/2022/03/springboottest-vs-webmvctest.html)

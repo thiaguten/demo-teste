@@ -15,8 +15,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.ServletWebRequest;
-import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.example.demoteste.usuario.UsuarioNotFoundException;
@@ -31,17 +29,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(Exception.class)
-    ResponseEntity<Problem> handleUnknownException(Exception ex, WebRequest request) {
+    ResponseEntity<Problem> handleUnknownException(Exception ex, HttpServletRequest request) {
         return problemEntity(ex, request, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler({ UsuarioNotFoundException.class })
-    ResponseEntity<Problem> handleNotFoundException(Exception ex, WebRequest request) {
+    ResponseEntity<Problem> handleNotFoundException(Exception ex, HttpServletRequest request) {
         return problemEntity(ex, request, HttpStatus.NOT_FOUND);
     }
 
-    protected Problem problem(Exception ex, WebRequest request, HttpStatus status) {
-        String path = getRequestURI(request);
+    protected Problem problem(Exception ex, HttpServletRequest request, HttpStatus status) {
+        String path = request.getRequestURI();
         String detail = Optional.ofNullable(ex.getCause())
                 .map(Throwable::getMessage)
                 .orElse(ExceptionUtils.getRootCauseMessage(ex));
@@ -51,38 +49,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .withTitle(title)
                 .withDetail(detail)
                 .withInstance(URI.create(path))
-                .withProperties(map -> {
-                    map.put("timestamp", OffsetDateTime.now());
-                    map.put("sessionId", getSessionId(request));
-                });
+                .withProperties(map -> map.put("timestamp", OffsetDateTime.now()));
     }
 
-    protected ResponseEntity<Problem> problemEntity(Exception ex, WebRequest request, HttpStatus status) {
+    protected ResponseEntity<Problem> problemEntity(Exception ex, HttpServletRequest request, HttpStatus status) {
         log.error("", ex);
         return ResponseEntity.status(status)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(problem(ex, request, status));
-    }
-
-    protected String getSessionId(WebRequest request) {
-        String sessionId = null;
-        if (request instanceof ServletWebRequest) {
-            HttpServletRequest httpRequest = parse(request);
-            sessionId = httpRequest.getSession().getId();
-        }
-        return sessionId;
-    }
-
-    protected String getRequestURI(WebRequest request) {
-        String path = null;
-        if (request instanceof ServletWebRequest) {
-            HttpServletRequest httpRequest = parse(request);
-            path = httpRequest.getRequestURI();
-        }
-        return path;
-    }
-
-    private HttpServletRequest parse(WebRequest request) {
-        return ((ServletWebRequest) request).getRequest();
     }
 }
