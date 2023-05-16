@@ -7,15 +7,14 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.hateoas.mediatype.problem.Problem;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -27,14 +26,13 @@ import com.example.demoteste.usuario.UsuarioNotFoundException;
  * @author Thiago Gutenberg C. da Costa
  */
 @ControllerAdvice
-@RequestMapping(produces = "application/problem+json")
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    @ResponseBody
-    Problem handleUnknownException(Exception ex, WebRequest request) {
-        return problem(ex, request, HttpStatus.INTERNAL_SERVER_ERROR);
+    ResponseEntity<Problem> handleUnknownException(Exception ex, WebRequest request) {
+        return problemEntity(ex, request, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler({ UsuarioNotFoundException.class })
@@ -60,6 +58,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     protected ResponseEntity<Problem> problemEntity(Exception ex, WebRequest request, HttpStatus status) {
+        log.error("", ex);
         return ResponseEntity.status(status)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(problem(ex, request, status));

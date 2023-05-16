@@ -45,15 +45,17 @@ public class UsuarioRepositoryIntegrationTest {
 
     @Test
     public void testFindByIdJoinFetch() {
+        // given - condição prévia ou configuração
         assertThat(usuario).isNotNull();
         assertThat(usuario.getDetalhe()).isNotNull();
         assertThat(usuario.getId()).isNull();
         assertThat(usuario.getDetalhe().getId()).isNull();
-        // given
         Usuario usuarioSalvo = entityManager.persist(usuario);
-        // when
+
+        // when - ação ou o comportamento que estamos testando
         Optional<Usuario> usuarioOptional = usuarioRepository.findByIdJoinFetch(usuarioSalvo.getId());
-        // then
+
+        // then - verificar a saída
         assertThat(usuarioOptional)
                 .hasValueSatisfying(u -> {
                     assertThat(u.getId()).isEqualTo(usuarioSalvo.getId());
@@ -64,15 +66,18 @@ public class UsuarioRepositoryIntegrationTest {
 
     @Test
     public void testFindByIdpIdJoinFetch() {
+        // given - condição prévia ou configuração
         assertThat(usuario).isNotNull();
         assertThat(usuario.getDetalhe()).isNotNull();
         assertThat(usuario.getId()).isNull();
         assertThat(usuario.getDetalhe().getId()).isNull();
-        // given
+
         Usuario usuarioSalvo = entityManager.persist(usuario);
-        // when
+
+        // when - ação ou o comportamento que estamos testando
         Optional<Usuario> usuarioOptional = usuarioRepository.findByIdpIdJoinFetch(usuario.getIdpId());
-        // then
+
+        // then - verificar a saída
         assertThat(usuarioOptional)
                 .hasValueSatisfying(u -> {
                     assertThat(u.getId()).isEqualTo(usuarioSalvo.getId());
@@ -83,17 +88,19 @@ public class UsuarioRepositoryIntegrationTest {
 
     @Test
     public void testFindByUltimoNome() {
+        // given - condição prévia ou configuração
         assertThat(usuario).isNotNull();
         assertThat(usuario.getDetalhe()).isNotNull();
         assertThat(usuario.getId()).isNull();
         assertThat(usuario.getDetalhe().getId()).isNull();
 
         UsuarioIdentificado usuarioIdentificado = usuario.getDetalhe();
-        // given
         entityManager.persist(usuario);
-        // when
+
+        // when - ação ou o comportamento que estamos testando
         List<Usuario> usuarios = usuarioRepository.findByUltimoNomeJoinFetch(usuarioIdentificado.getUltimoNome());
-        // then
+
+        // then - verificar a saída
         assertThat(usuarios)
                 .extracting(Usuario::getDetalhe)
                 .extracting(UsuarioIdentificado::getUltimoNome)

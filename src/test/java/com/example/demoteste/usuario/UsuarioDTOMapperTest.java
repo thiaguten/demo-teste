@@ -50,20 +50,27 @@ public class UsuarioDTOMapperTest {
 
     @Test
     public void toDtoTest() {
+        // given - condição prévia ou configuração
         assertThat(usuario).isNotNull();
+        // when - ação ou o comportamento que estamos testando
         UsuarioDTO usuarioDTOAtual = usuarioDTOMapper.toDto(usuario);
+        // then - verificar a saída
         assertThat(usuarioDTOAtual).usingRecursiveComparison().isEqualTo(usuarioDTO);
     }
 
     @Test
     public void fromDtoTest() {
+        // given - condição prévia ou configuração
         assertThat(usuarioDTO).isNotNull();
+        // when - ação ou o comportamento que estamos testando
         Usuario usuarioAtual = usuarioDTOMapper.fromDto(usuarioDTO);
+        // then - verificar a saída
         assertThat(usuarioAtual).usingRecursiveComparison().isEqualTo(usuario);
     }
 
     @Test
     public void toDtoSemDetalheTest() {
+        // given - condição prévia ou configuração
         assertThat(usuario).isNotNull();
         usuario.setDetalhe(null);
 
@@ -71,7 +78,10 @@ public class UsuarioDTOMapperTest {
         usuarioDTO.setId(usuario.getId());
         usuarioDTO.setIdpId(usuario.getIdpId());
 
+        // when - ação ou o comportamento que estamos testando
         UsuarioDTO usuarioDTOAtual = usuarioDTOMapper.toDto(usuario);
+
+        // then - verificar a saída
         assertThat(usuarioDTOAtual).usingRecursiveComparison().isEqualTo(usuarioDTO);
     }
 }

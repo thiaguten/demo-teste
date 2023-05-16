@@ -29,6 +29,7 @@ public class UsuarioModelAssemblerTest {
 
     @Test
     public void toModelTest() {
+        // given - condição prévia ou configuração
         Long id = 1L;
         Usuario usuario = new Usuario();
         usuario.setId(id);
@@ -36,12 +37,14 @@ public class UsuarioModelAssemblerTest {
         usuarioDTO.setId(id);
         when(usuarioDTOMapper.toDto(any(Usuario.class))).thenReturn(usuarioDTO);
 
+        // when - ação ou o comportamento que estamos testando
         EntityModel<UsuarioDTO> model = usuarioModelAssembler.toModel(usuario);
 
+        // then - verificar a saída
         verify(usuarioDTOMapper).toDto(usuario);
 
-        // assertThat(model.getRequiredLink(IanaLinkRelations.SELF)).isEqualTo(Link.of("/api/v1/usuarios/1"));
-
+        // assertThat(model.getRequiredLink(IanaLinkRelations.SELF))
+        //         .isEqualTo(Link.of("/api/v1/usuarios/1"));
         assertThat(model.getRequiredLink(IanaLinkRelations.SELF))
                 .extracting(Link::getHref)
                 .isEqualTo("/api/v1/usuarios/1");
