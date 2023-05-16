@@ -11,6 +11,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
+import org.hibernate.annotations.NaturalId;
+
 /**
  * 
  * @author Thiago Gutenberg C. da Costa
@@ -25,7 +27,7 @@ public class Usuario implements Serializable {
     private Long id;
 
     // ID criado para o usuario no provedor de identidade (keycloak)
-    // @NaturalId
+    @NaturalId
     @Column(nullable = false, unique = true, updatable = false)
     private String idpId;
 

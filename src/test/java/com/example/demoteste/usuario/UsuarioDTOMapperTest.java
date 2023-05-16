@@ -1,6 +1,7 @@
 package com.example.demoteste.usuario;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.then; // assertThat
+import static org.assertj.core.api.BDDAssumptions.given; // assumeThat
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,27 +52,27 @@ public class UsuarioDTOMapperTest {
     @Test
     public void toDtoTest() {
         // given - condição prévia ou configuração
-        assertThat(usuario).isNotNull();
+        given(usuario).isNotNull();
         // when - ação ou o comportamento que estamos testando
         UsuarioDTO usuarioDTOAtual = usuarioDTOMapper.toDto(usuario);
         // then - verificar a saída
-        assertThat(usuarioDTOAtual).usingRecursiveComparison().isEqualTo(usuarioDTO);
+        then(usuarioDTOAtual).usingRecursiveComparison().isEqualTo(usuarioDTO);
     }
 
     @Test
     public void fromDtoTest() {
         // given - condição prévia ou configuração
-        assertThat(usuarioDTO).isNotNull();
+        given(usuarioDTO).isNotNull();
         // when - ação ou o comportamento que estamos testando
         Usuario usuarioAtual = usuarioDTOMapper.fromDto(usuarioDTO);
         // then - verificar a saída
-        assertThat(usuarioAtual).usingRecursiveComparison().isEqualTo(usuario);
+        then(usuarioAtual).usingRecursiveComparison().isEqualTo(usuario);
     }
 
     @Test
     public void toDtoSemDetalheTest() {
         // given - condição prévia ou configuração
-        assertThat(usuario).isNotNull();
+        given(usuario).isNotNull();
         usuario.setDetalhe(null);
 
         usuarioDTO = new UsuarioDTO();
@@ -80,8 +81,7 @@ public class UsuarioDTOMapperTest {
 
         // when - ação ou o comportamento que estamos testando
         UsuarioDTO usuarioDTOAtual = usuarioDTOMapper.toDto(usuario);
-
         // then - verificar a saída
-        assertThat(usuarioDTOAtual).usingRecursiveComparison().isEqualTo(usuarioDTO);
+        then(usuarioDTOAtual).usingRecursiveComparison().isEqualTo(usuarioDTO);
     }
 }

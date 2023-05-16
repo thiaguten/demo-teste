@@ -107,20 +107,4 @@ public class UsuarioIdentificado implements Serializable {
     public void setEmail(String email) {
         this.email = email;
     }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(cpf);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (!(obj instanceof UsuarioIdentificado))
-            return false;
-        UsuarioIdentificado other = (UsuarioIdentificado) obj;
-        return Objects.equals(cpf, other.cpf);
-    }
-
 }

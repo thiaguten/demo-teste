@@ -61,5 +61,4 @@ class DemoTesteApplicationTests {
 		assertThat(respostaAtual).isEqualToIgnoringNewLines(respostaEsperada);
 		JSONAssert.assertEquals(respostaEsperada, respostaAtual, false);
 	}
-	
 }

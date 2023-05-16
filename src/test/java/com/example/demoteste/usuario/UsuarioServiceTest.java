@@ -1,24 +1,22 @@
 package com.example.demoteste.usuario;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.BDDAssertions.and; // assertThat
+import static org.assertj.core.api.BDDAssertions.catchException;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
-import static org.mockito.Mockito.doNothing;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
@@ -54,24 +52,15 @@ public class UsuarioServiceTest {
         usuarioExpected.setId(1L);
         usuarioExpected.setIdpId(usuarioNovo.getIdpId());
 
-        given(usuarioRepository.save(any(Usuario.class))).willReturn(usuarioExpected);
+        given(usuarioRepository.save(usuarioNovo)).willReturn(usuarioExpected);
 
         // when - ação ou o comportamento que estamos testando
         Usuario usuarioSalvo = usuarioService.salvar(usuarioNovo);
 
         // then - verificar a saída
-        ArgumentCaptor<Usuario> usuarioCaptor = ArgumentCaptor.forClass(Usuario.class);
-
-        then(usuarioRepository).should().save(usuarioCaptor.capture());
+        then(usuarioRepository).should().save(usuarioNovo);
         then(usuarioRepository).shouldHaveNoMoreInteractions();
-
-        assertThat(usuarioSalvo)
-                .usingRecursiveComparison()
-                .isEqualTo(usuarioExpected);
-
-        assertThat(usuarioNovo)
-                .usingRecursiveComparison()
-                .isEqualTo(usuarioCaptor.getValue());
+        and.then(usuarioSalvo).usingRecursiveComparison().isEqualTo(usuarioExpected);
     }
 
     @Test
@@ -83,24 +72,15 @@ public class UsuarioServiceTest {
         usuarioExpected.setId(id);
         usuarioExpected.setIdpId("123abc");
 
-        given(usuarioRepository.findByIdJoinFetch(anyLong())).willReturn(Optional.of(usuarioExpected));
+        given(usuarioRepository.findByIdJoinFetch(id)).willReturn(Optional.of(usuarioExpected));
 
         // when - ação ou o comportamento que estamos testando
         Optional<Usuario> usuarioRecuperadoOptional = usuarioService.recuperar(id);
 
         // then - verificar a saída
-        ArgumentCaptor<Long> idCaptor = ArgumentCaptor.forClass(Long.class);
-
-        then(usuarioRepository).should().findByIdJoinFetch(idCaptor.capture());
+        then(usuarioRepository).should().findByIdJoinFetch(id);
         then(usuarioRepository).shouldHaveNoMoreInteractions();
-
-        // assertThat(usuarioRecuperadoOptional).hasValue(usuarioExpected);
-        assertThat(usuarioRecuperadoOptional).hasValueSatisfying(usuarioRecuperado -> {
-            assertThat(usuarioRecuperado).usingRecursiveComparison().isEqualTo(usuarioExpected);
-            assertThat(usuarioRecuperado.getId()).isEqualTo(idCaptor.getValue());
-        });
-
-        assertThat(id).isEqualTo(idCaptor.getValue());
+        and.then(usuarioRecuperadoOptional).hasValue(usuarioExpected);
     }
 
     @Test
@@ -112,42 +92,29 @@ public class UsuarioServiceTest {
         usuarioExpected.setId(1L);
         usuarioExpected.setIdpId(idPId);
 
-        given(usuarioRepository.findByIdpIdJoinFetch(anyString())).willReturn(Optional.of(usuarioExpected));
+        given(usuarioRepository.findByIdpIdJoinFetch(idPId)).willReturn(Optional.of(usuarioExpected));
 
         // when - ação ou o comportamento que estamos testando
         Optional<Usuario> usuarioRecuperadoOptional = usuarioService.recuperar(idPId);
 
         // then - verificar a saída
-        ArgumentCaptor<String> idIdPCaptor = ArgumentCaptor.forClass(String.class);
-
-        then(usuarioRepository).should().findByIdpIdJoinFetch(idIdPCaptor.capture());
+        then(usuarioRepository).should().findByIdpIdJoinFetch(idPId);
         then(usuarioRepository).shouldHaveNoMoreInteractions();
-
-        // assertThat(usuarioRecuperadoOptional).hasValue(usuarioExpected);
-        assertThat(usuarioRecuperadoOptional).hasValueSatisfying(usuarioRecuperado -> {
-            assertThat(usuarioRecuperado).usingRecursiveComparison().isEqualTo(usuarioExpected);
-            assertThat(usuarioRecuperado.getIdpId()).isEqualTo(idIdPCaptor.getValue());
-        });
-
-        assertThat(idPId).isEqualTo(idIdPCaptor.getValue());
+        and.then(usuarioRecuperadoOptional).hasValue(usuarioExpected);
     }
 
     @Test
     public void deletarTest() {
         // given - condição prévia ou configuração
         Long id = 1L;
-        doNothing().when(usuarioRepository).deleteById(anyLong());
+        willDoNothing().given(usuarioRepository).deleteById(id);
 
         // when - ação ou o comportamento que estamos testando
         usuarioService.deletar(id);
 
         // then - verificar a saída
-        ArgumentCaptor<Long> idCaptor = ArgumentCaptor.forClass(Long.class);
-
-        then(usuarioRepository).should().deleteById(idCaptor.capture());
+        then(usuarioRepository).should().deleteById(id);
         then(usuarioRepository).shouldHaveNoMoreInteractions();
-
-        assertThat(id).isEqualTo(idCaptor.getValue());
     }
 
     @Test
@@ -156,27 +123,23 @@ public class UsuarioServiceTest {
         Long id = 1L;
         EmptyResultDataAccessException exception = new EmptyResultDataAccessException(
                 "No class com.example.demoteste.usuario.Usuario entity with id 1 exists!", 0);
-        willThrow(exception).given(usuarioRepository).deleteById(anyLong());
+        willThrow(exception).given(usuarioRepository).deleteById(id);
 
         // when - ação ou o comportamento que estamos testando
-        Executable deletarPorId = () -> usuarioService.deletar(id);
+        ThrowingCallable deletarPorId = () -> usuarioService.deletar(id);
 
         // then - verificar a saída
-        ArgumentCaptor<Long> idCaptor = ArgumentCaptor.forClass(Long.class);
-
-        UsuarioNotFoundException exceptionEsperada = assertThrows(UsuarioNotFoundException.class, deletarPorId);
-
-        then(usuarioRepository).should().deleteById(idCaptor.capture());
+        Exception exceptionEsperada = catchException(deletarPorId);
+        then(usuarioRepository).should().deleteById(id);
         then(usuarioRepository).shouldHaveNoMoreInteractions();
-
-        assertThat(exceptionEsperada)
+        and.then(exceptionEsperada)
                 .isExactlyInstanceOf(UsuarioNotFoundException.class)
-                .hasMessage("Não foi possível encontrar o usuário: (ID) " + idCaptor.getValue())
+                .hasMessage("Não foi possível encontrar o usuário: (ID) " + id)
                 .hasRootCauseExactlyInstanceOf(EmptyResultDataAccessException.class)
                 .hasRootCauseMessage("No class com.example.demoteste.usuario.Usuario entity with id 1 exists!");
     }
 
-    static Stream<List<Usuario>> usuariosProvider() {
+    static Stream<List<Usuario>> usuarioListProvider() {
         Usuario usuario1 = new Usuario();
         usuario1.setId(1L);
         usuario1.setIdpId("123abc");
@@ -189,7 +152,7 @@ public class UsuarioServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("usuariosProvider")
+    @MethodSource("usuarioListProvider")
     public void listar2Test(List<Usuario> usuariosExpected) {
         // given - condição prévia ou configuração
         given(usuarioRepository.findAll()).willReturn(usuariosExpected);
@@ -200,30 +163,26 @@ public class UsuarioServiceTest {
         // then - verificar a saída
         then(usuarioRepository).should().findAll();
         then(usuarioRepository).shouldHaveNoMoreInteractions();
-
-        assertThat(usuarios).isEqualTo(usuariosExpected);
+        and.then(usuarios).isEqualTo(usuariosExpected);
     }
 
     @Test
     public void obterReferenciaTest() {
         // given - condição prévia ou configuração
+        Long id = 1L;
         Usuario usuarioExpected = new Usuario();
-        usuarioExpected.setId(1L);
+        usuarioExpected.setId(id);
         usuarioExpected.setIdpId("123abc");
 
-        given(usuarioRepository.getReferenceById(anyLong())).willReturn(usuarioExpected);
+        given(usuarioRepository.getReferenceById(id)).willReturn(usuarioExpected);
 
         // when - ação ou o comportamento que estamos testando
-        Usuario referencia = usuarioService.obterReferencia(1L);
+        Usuario referencia = usuarioService.obterReferencia(id);
 
         // then - verificar a saída
-        ArgumentCaptor<Long> idCaptor = ArgumentCaptor.forClass(Long.class);
-
-        then(usuarioRepository).should().getReferenceById(idCaptor.capture());
+        then(usuarioRepository).should().getReferenceById(id);
         then(usuarioRepository).shouldHaveNoMoreInteractions();
-
-        assertThat(referencia).isEqualTo(usuarioExpected);
-        assertThat(referencia.getId()).isEqualTo(idCaptor.getValue());
+        and.then(referencia).isEqualTo(usuarioExpected);
     }
 
     @Test
@@ -257,23 +216,20 @@ public class UsuarioServiceTest {
         usuarioAlteracao.setDetalhe(usuarioAlteracaoDetalhe);
 
         // mockando comportamento do .map(...)
-        given(usuarioRepository.findByIdJoinFetch(anyLong())).willReturn(Optional.of(usuarioRecuperado));
+        given(usuarioRepository.findByIdJoinFetch(id)).willReturn(Optional.of(usuarioRecuperado));
         given(usuarioRepository.save(any(Usuario.class))).willReturn(usuarioAlteracao);
 
         // when - ação ou o comportamento que estamos testando
         Usuario usuarioAlterado = usuarioService.atualizar(usuarioAlteracao, id);
 
         // then - verificar a saída
-        ArgumentCaptor<Long> idCaptor = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<Usuario> usuarioCaptor = ArgumentCaptor.forClass(Usuario.class);
 
-        then(usuarioRepository).should().findByIdJoinFetch(idCaptor.capture());
+        then(usuarioRepository).should().findByIdJoinFetch(id);
         then(usuarioRepository).should().save(usuarioCaptor.capture());
         then(usuarioRepository).shouldHaveNoMoreInteractions();
-
-        assertThat(usuarioAlterado).usingRecursiveComparison().isEqualTo(usuarioAlteracao);
-        assertThat(usuarioAlterado).usingRecursiveComparison().isEqualTo(usuarioCaptor.getValue());
-        assertThat(usuarioAlterado.getId()).isEqualTo(idCaptor.getValue());
+        and.then(usuarioAlterado).usingRecursiveComparison().isEqualTo(usuarioAlteracao);
+        and.then(usuarioAlterado).usingRecursiveComparison().isEqualTo(usuarioCaptor.getValue());
     }
 
     @Test
@@ -307,23 +263,16 @@ public class UsuarioServiceTest {
         usuarioNovo.setDetalhe(usuarioNovoDetalhe);
 
         // mockando comportamento do .orElseGet(...)
-        given(usuarioRepository.findByIdJoinFetch(anyLong())).willReturn(Optional.empty());
-        given(usuarioRepository.save(any(Usuario.class))).willReturn(usuarioNovo);
+        given(usuarioRepository.findByIdJoinFetch(id)).willReturn(Optional.empty());
+        given(usuarioRepository.save(usuarioNovo)).willReturn(usuarioNovo);
 
         // when - ação ou o comportamento que estamos testando
         Usuario usuarioSalvo = usuarioService.atualizar(usuarioNovo, id);
 
         // then - verificar a saída
-        ArgumentCaptor<Long> idCaptor = ArgumentCaptor.forClass(Long.class);
-        ArgumentCaptor<Usuario> usuarioCaptor = ArgumentCaptor.forClass(Usuario.class);
-
-        then(usuarioRepository).should().findByIdJoinFetch(idCaptor.capture());
-        then(usuarioRepository).should().save(usuarioCaptor.capture());
+        then(usuarioRepository).should().findByIdJoinFetch(id);
+        then(usuarioRepository).should().save(usuarioNovo);
         then(usuarioRepository).shouldHaveNoMoreInteractions();
-
-        assertThat(usuarioSalvo).usingRecursiveComparison().isEqualTo(usuarioNovo);
-        assertThat(usuarioSalvo).usingRecursiveComparison().isEqualTo(usuarioCaptor.getValue());
-        assertThat(usuarioSalvo.getId()).isEqualTo(idCaptor.getValue());
+        and.then(usuarioSalvo).usingRecursiveComparison().isEqualTo(usuarioNovo);
     }
-
 }

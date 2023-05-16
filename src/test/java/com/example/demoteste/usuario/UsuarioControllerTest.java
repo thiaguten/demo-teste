@@ -1,15 +1,12 @@
 package com.example.demoteste.usuario;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
-import static org.mockito.Mockito.doNothing;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.afford;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -27,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import org.assertj.core.api.BDDAssumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,15 +67,15 @@ public class UsuarioControllerTest {
 
     @BeforeEach
     public void setUp() {
-        Long id = 1L;
-
-        usuario = new Usuario();
-        usuario.setId(id);
-        usuario.setIdpId("123abc");
+        final Long id = 1L;
 
         usuarioDto = new UsuarioDTO();
-        usuarioDto.setId(usuario.getId());
-        usuarioDto.setIdpId(usuario.getIdpId());
+        usuarioDto.setId(id);
+        usuarioDto.setIdpId("123abc");
+
+        usuario = new Usuario();
+        usuario.setId(usuarioDto.getId());
+        usuario.setIdpId(usuarioDto.getIdpId());
 
         entityModel = EntityModel.of(usuarioDto,
                 linkTo(methodOn(UsuarioController.class).recuperar(id)).withSelfRel()
@@ -91,7 +89,7 @@ public class UsuarioControllerTest {
         // given - condição prévia ou configuração
         List<Usuario> usuarios = Arrays.asList(usuario);
         given(usuarioService.listar()).willReturn(usuarios);
-        given(usuarioModelAssembler.toModel(any(Usuario.class))).willReturn(entityModel);
+        given(usuarioModelAssembler.toModel(usuario)).willReturn(entityModel);
 
         // when - ação ou o comportamento que estamos testando
         ResultActions response = this.mvc.perform(get("/api/v1/usuarios"));
@@ -112,9 +110,9 @@ public class UsuarioControllerTest {
     @Test
     public void recuperarUsuarioTest() throws Exception {
         // given - condição prévia ou configuração
-        assertThat(usuario.getId()).isNotNull();
-        given(usuarioService.recuperar(anyLong())).willReturn(Optional.of(usuario));
-        given(usuarioModelAssembler.toModel(any(Usuario.class))).willReturn(entityModel);
+        BDDAssumptions.given(usuario.getId()).isNotNull();
+        given(usuarioService.recuperar(usuario.getId())).willReturn(Optional.of(usuario));
+        given(usuarioModelAssembler.toModel(usuario)).willReturn(entityModel);
 
         // when - ação ou o comportamento que estamos testando
         ResultActions response = this.mvc.perform(get("/api/v1/usuarios/" + usuario.getId()));
@@ -135,10 +133,10 @@ public class UsuarioControllerTest {
     @Test
     public void recuperarIdPUsuarioTest() throws Exception {
         // given - condição prévia ou configuração
-        assertThat(usuario.getIdpId()).isNotNull();
+        BDDAssumptions.given(usuario.getIdpId()).isNotNull();
         Optional<Usuario> usuarioOptional = Optional.of(usuario);
-        given(usuarioService.recuperar(anyString())).willReturn(usuarioOptional);
-        given(usuarioModelAssembler.toModel(any(Usuario.class))).willReturn(entityModel);
+        given(usuarioService.recuperar(usuario.getIdpId())).willReturn(usuarioOptional);
+        given(usuarioModelAssembler.toModel(usuario)).willReturn(entityModel);
 
         // when - ação ou o comportamento que estamos testando
         ResultActions response = this.mvc.perform(get("/api/v1/usuarios/IdP/" + usuario.getIdpId()));
@@ -159,8 +157,8 @@ public class UsuarioControllerTest {
     @Test
     public void deletarUsuarioTest() throws Exception {
         // given - condição prévia ou configuração
-        assertThat(usuario.getId()).isNotNull();
-        doNothing().when(usuarioService).deletar(anyLong());
+        BDDAssumptions.given(usuario.getId()).isNotNull();
+        willDoNothing().given(usuarioService).deletar(usuario.getId());
 
         // when - ação ou o comportamento que estamos testando
         ResultActions response = this.mvc.perform(delete("/api/v1/usuarios/" + usuario.getId()));
@@ -176,15 +174,35 @@ public class UsuarioControllerTest {
     @Test
     public void criarUsuarioTest() throws Exception {
         // given - condição prévia ou configuração
-        given(usuarioDTOMapper.fromDto(any(UsuarioDTO.class))).willReturn(new Usuario());
-        given(usuarioService.salvar(any(Usuario.class))).willReturn(usuario);
-        given(usuarioModelAssembler.toModel(any(Usuario.class))).willReturn(entityModel);
+        UsuarioDTO usuarioDtoNovo = new UsuarioDTO();
+        usuarioDtoNovo.setCpf("33333333333");
+        usuarioDtoNovo.setNomeUsuario("nome.usuario");
+
+        Usuario usuarioNovo = new Usuario();
+        UsuarioIdentificado usuarioDetalheNovo = new UsuarioIdentificado();
+        usuarioDetalheNovo.setCpf(usuarioDtoNovo.getCpf());
+        usuarioDetalheNovo.setNomeUsuario(usuarioDtoNovo.getNomeUsuario());
+        usuarioNovo.setDetalhe(usuarioDetalheNovo);
+
+        // usuario salvo esperado
+        BDDAssumptions.given(usuario.getId()).isNotNull();
+        BDDAssumptions.given(usuario.getIdpId()).isNotNull();
+
+        UsuarioIdentificado usuarioDetalheSalvo = new UsuarioIdentificado();
+        usuarioDetalheSalvo.setId(usuario.getId());
+        usuarioDetalheSalvo.setCpf(usuarioNovo.getDetalhe().getCpf());
+        usuarioDetalheSalvo.setNomeUsuario(usuarioNovo.getDetalhe().getNomeUsuario());
+        usuario.setDetalhe(usuarioDetalheSalvo);
+
+        given(usuarioDTOMapper.fromDto(any(UsuarioDTO.class))).willReturn(usuarioNovo);
+        given(usuarioService.salvar(usuarioNovo)).willReturn(usuario);
+        given(usuarioModelAssembler.toModel(usuario)).willReturn(entityModel);
 
         // when - ação ou o comportamento que estamos testando
         ResultActions response = this.mvc.perform(post("/api/v1/usuarios")
                 .accept(MediaTypes.HAL_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(usuarioDto)));
+                .content(objectMapper.writeValueAsString(usuarioDtoNovo)));
 
         // then - verificar a saída
         response.andDo(print())
@@ -195,7 +213,7 @@ public class UsuarioControllerTest {
                 .andExpect(jsonPath("$._links.self.href", is("/api/v1/usuarios/1")));
 
         then(usuarioDTOMapper).should().fromDto(any(UsuarioDTO.class));
-        then(usuarioService).should().salvar(any(Usuario.class));
+        then(usuarioService).should().salvar(usuarioNovo);
         then(usuarioModelAssembler).should().toModel(usuario);
         then(usuarioDTOMapper).shouldHaveNoMoreInteractions();
         then(usuarioService).shouldHaveNoMoreInteractions();
@@ -205,36 +223,28 @@ public class UsuarioControllerTest {
     @Test
     public void atualizarUsuarioTest() throws Exception {
         // given - condição prévia ou configuração
-        final Long id = 1L;
-        final String idIdP = "123abc"; // natural_id
-        final String cpf = "33333333333"; // natural_id
-        final String nomeUsuario = "lalalala"; // natural_id
+        BDDAssumptions.given(usuarioDto.getId()).isNotNull();
+        BDDAssumptions.given(usuarioDto.getIdpId()).isNotNull();
+        BDDAssumptions.given(usuario.getId()).isNotNull();
+        BDDAssumptions.given(usuario.getIdpId()).isNotNull();
 
-        usuarioDto.setId(id);
-        usuarioDto.setIdpId(idIdP);
-        usuarioDto.setCpf(cpf);
-        usuarioDto.setNomeUsuario(nomeUsuario);
-        usuarioDto.setPrimeiroNome(null);
-        usuarioDto.setUltimoNome(null);
-        usuarioDto.setEmail(null);
+        // dto alteracao
+        usuarioDto.setCpf("33333333333");
+        usuarioDto.setNomeUsuario("lalalala");
 
-        usuario.setId(usuarioDto.getId());
-        usuario.setIdpId(usuarioDto.getIdpId());
+        // usuario alteracao
         UsuarioIdentificado usuarioDetalhe = new UsuarioIdentificado();
         usuarioDetalhe.setId(usuario.getId());
         usuarioDetalhe.setCpf(usuarioDto.getCpf());
         usuarioDetalhe.setNomeUsuario(usuarioDto.getNomeUsuario());
-        usuarioDetalhe.setPrimeiroNome(usuarioDto.getPrimeiroNome());
-        usuarioDetalhe.setUltimoNome(usuarioDto.getUltimoNome());
-        usuarioDetalhe.setEmail(usuarioDto.getEmail());
         usuario.setDetalhe(usuarioDetalhe);
 
         given(usuarioDTOMapper.fromDto(any(UsuarioDTO.class))).willReturn(usuario);
-        given(usuarioService.atualizar(any(Usuario.class), anyLong())).willReturn(usuario);
-        given(usuarioModelAssembler.toModel(any(Usuario.class))).willReturn(entityModel);
+        given(usuarioService.atualizar(usuario, usuarioDto.getId())).willReturn(usuario);
+        given(usuarioModelAssembler.toModel(usuario)).willReturn(entityModel);
 
         // when - ação ou o comportamento que estamos testando
-        ResultActions response = this.mvc.perform(put("/api/v1/usuarios/" + id)
+        ResultActions response = this.mvc.perform(put("/api/v1/usuarios/" + usuarioDto.getId())
                 .accept(MediaTypes.HAL_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(usuarioDto)));
@@ -251,7 +261,7 @@ public class UsuarioControllerTest {
                 .andExpect(jsonPath("$._links.self.href", is("/api/v1/usuarios/1")));
 
         then(usuarioDTOMapper).should().fromDto(any(UsuarioDTO.class));
-        then(usuarioService).should().atualizar(any(Usuario.class), anyLong());
+        then(usuarioService).should().atualizar(usuario, usuarioDto.getId());
         then(usuarioModelAssembler).should().toModel(usuario);
         then(usuarioDTOMapper).shouldHaveNoMoreInteractions();
         then(usuarioService).shouldHaveNoMoreInteractions();
@@ -261,8 +271,9 @@ public class UsuarioControllerTest {
     @Test
     public void deveRetornarErroAoRecuperarUsuarioInexistente() throws Exception {
         // given - condição prévia ou configuração
-        Long id = 1L;
-        given(usuarioService.recuperar(anyLong())).willThrow(new UsuarioNotFoundException(id));
+        final Long id = usuarioDto.getId();
+        BDDAssumptions.given(id).isNotNull();
+        given(usuarioService.recuperar(id)).willThrow(new UsuarioNotFoundException(id));
 
         // when - ação ou o comportamento que estamos testando
         ResultActions response = this.mvc.perform(get("/api/v1/usuarios/" + id));
@@ -286,8 +297,9 @@ public class UsuarioControllerTest {
     @Test
     public void deveRetornarErroAoRecuperarIdPUsuarioInexistente() throws Exception {
         // given - condição prévia ou configuração
-        String id = "123abc";
-        given(usuarioService.recuperar(anyString())).willThrow(new UsuarioNotFoundException(id));
+        final String id = usuarioDto.getIdpId();
+        BDDAssumptions.given(id).isNotNull();
+        given(usuarioService.recuperar(id)).willThrow(new UsuarioNotFoundException(id));
 
         // when - ação ou o comportamento que estamos testando
         ResultActions response = this.mvc.perform(get("/api/v1/usuarios/IdP/" + id));
@@ -311,8 +323,9 @@ public class UsuarioControllerTest {
     @Test
     public void deveRetornarErroAoDeletarUsuarioInexistente() throws Exception {
         // given - condição prévia ou configuração
-        Long id = 1L;
-        willThrow(new UsuarioNotFoundException(id)).given(usuarioService).deletar(anyLong());
+        final Long id = usuarioDto.getId();
+        BDDAssumptions.given(id).isNotNull();
+        willThrow(new UsuarioNotFoundException(id)).given(usuarioService).deletar(id);
 
         // when - ação ou o comportamento que estamos testando
         ResultActions response = this.mvc.perform(delete("/api/v1/usuarios/" + id));
@@ -337,8 +350,8 @@ public class UsuarioControllerTest {
     public void deveRetornarErroAoSalvarUsuarioInvalido() throws Exception {
         // given - condição prévia ou configuração
         usuarioDto = new UsuarioDTO();
-        usuarioDto.setCpf(null);
         usuarioDto.setNomeUsuario("nome.usuario");
+        BDDAssumptions.given(usuarioDto.getCpf()).isNull();
 
         UsuarioIdentificado usuarioDetalhe = new UsuarioIdentificado();
         usuarioDetalhe.setNomeUsuario(usuarioDto.getNomeUsuario());
@@ -349,10 +362,11 @@ public class UsuarioControllerTest {
 
         org.hibernate.PropertyValueException nestedException = new org.hibernate.PropertyValueException(
                 "not-null property references a null or transient value", UsuarioIdentificado.class.getName(), "cpf");
-        DataIntegrityViolationException exception = new DataIntegrityViolationException(nestedException.getMessage(),
-                nestedException);
+        DataIntegrityViolationException exception = new DataIntegrityViolationException(
+                nestedException.getMessage(), nestedException);
+
         given(usuarioDTOMapper.fromDto(any(UsuarioDTO.class))).willReturn(usuario);
-        given(usuarioService.salvar(any(Usuario.class))).willThrow(exception);
+        given(usuarioService.salvar(usuario)).willThrow(exception);
 
         // when - ação ou o comportamento que estamos testando
         ResultActions response = this.mvc.perform(post("/api/v1/usuarios")
@@ -361,13 +375,8 @@ public class UsuarioControllerTest {
                 .content(objectMapper.writeValueAsString(usuarioDto)));
 
         // then - verificar a saída
-        assertThat(usuarioDto.getCpf()).isNull();
-        assertThat(usuarioDto.getNomeUsuario()).isNotNull();
-        assertThat(usuario.getDetalhe().getCpf()).isNull();
-        assertThat(usuario.getDetalhe().getNomeUsuario()).isNotNull();
-
-        String titleString = "not-null property references a null or transient value : com.example.demoteste.usuario.UsuarioIdentificado.cpf; nested exception is org.hibernate.PropertyValueException: not-null property references a null or transient value : com.example.demoteste.usuario.UsuarioIdentificado.cpf";
-        String detailString = "not-null property references a null or transient value : com.example.demoteste.usuario.UsuarioIdentificado.cpf";
+        final String titleString = "not-null property references a null or transient value : com.example.demoteste.usuario.UsuarioIdentificado.cpf; nested exception is org.hibernate.PropertyValueException: not-null property references a null or transient value : com.example.demoteste.usuario.UsuarioIdentificado.cpf";
+        final String detailString = "not-null property references a null or transient value : com.example.demoteste.usuario.UsuarioIdentificado.cpf";
         response.andDo(print())
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))

@@ -1,9 +1,9 @@
 package com.example.demoteste.usuario;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.BDDAssertions.and; // assertThat
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,17 +35,18 @@ public class UsuarioModelAssemblerTest {
         usuario.setId(id);
         UsuarioDTO usuarioDTO = new UsuarioDTO();
         usuarioDTO.setId(id);
-        when(usuarioDTOMapper.toDto(any(Usuario.class))).thenReturn(usuarioDTO);
+        given(usuarioDTOMapper.toDto(any(Usuario.class))).willReturn(usuarioDTO);
 
         // when - ação ou o comportamento que estamos testando
         EntityModel<UsuarioDTO> model = usuarioModelAssembler.toModel(usuario);
 
         // then - verificar a saída
-        verify(usuarioDTOMapper).toDto(usuario);
+        then(usuarioDTOMapper).should().toDto(usuario);
+        then(usuarioDTOMapper).shouldHaveNoMoreInteractions();
 
-        // assertThat(model.getRequiredLink(IanaLinkRelations.SELF))
-        //         .isEqualTo(Link.of("/api/v1/usuarios/1"));
-        assertThat(model.getRequiredLink(IanaLinkRelations.SELF))
+        // and.then(model.getRequiredLink(IanaLinkRelations.SELF))
+        // .isEqualTo(Link.of("/api/v1/usuarios/1"));
+        and.then(model.getRequiredLink(IanaLinkRelations.SELF))
                 .extracting(Link::getHref)
                 .isEqualTo("/api/v1/usuarios/1");
     }
